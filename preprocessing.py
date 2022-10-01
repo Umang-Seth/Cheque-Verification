@@ -48,8 +48,8 @@ def valTrackbars():
     return src
 
 def preProcessing(img):
-    imgGray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    imgBlur = cv2.GaussianBlur(imgGray,(3,3),1)
+    #imgGray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    imgBlur = cv2.GaussianBlur(img,(3,3),1)
     imgCanny = cv2.Canny(imgBlur, 0, 1)
     kernel = np.ones((5, 5))
     imgDial = cv2.dilate(imgCanny, kernel, iterations=2)
@@ -103,30 +103,33 @@ def sign_extraction(img):
     imgCropped = img[int(Height/2):Height-80,int(Width-Width/3):Width]
     return imgCropped
 
-def sign_verification(img1,img2):
-    orb = cv2.ORB_create(nfeatures=1000)
+def payee_extraction(img):
+    imgCropped = img[53:80,65:500]
+    return imgCropped
 
-    kp1, des1 = orb.detectAndCompute(img1, None)
-    kp2, des2 = orb.detectAndCompute(img2, None)
+def rs_extraction(img):
+    imgCropped = img[75:105,95:Width]
+    return imgCropped
 
-    bf = cv2.BFMatcher()
-    matches = bf.knnMatch(des1, des2, k=2)
+def amount_extraction(img):
+    imgCropped = img[0:Height,0:Width]
+    return imgCropped
 
-    good = []
+def date_extraction(img):
+    imgCropped = img[0:Height,0:Width]
+    return imgCropped
 
-    for m, n in matches:
-        if m.distance < 0.75 * n.distance:
-            good.append([m])
-
-    return len(good)
+def accno_extraction(img):
+    imgCropped = img[0:Height,0:Width]
+    return imgCropped
 
 initializeTrackbars()
 count = 0
 
 while True:
     #success, img = cap.read()
-    img = cv2.imread("Photo Cheque/sampleCheque.png")
-    sign = cv2.imread("Photo Cheque/sign.png")
+    img = cv2.imread("Photo Cheque/sampleCheque.png",0)
+    sign = cv2.imread("Photo Cheque/sign.png",0)
     image = image_resize(img, width=640, height=286)#(1280,567)(1280,582)(1280,572)
     Width = image.shape[1]
     Height = image.shape[0]
@@ -144,13 +147,20 @@ while True:
     if Biggest.size != 0:
         imgCropped = imgWarp
         cv2.imshow("Output", imgCropped)
-        imgWarpGray = cv2.cvtColor(imgCropped, cv2.COLOR_BGR2GRAY)
-        imgBin = cv2.threshold(imgWarpGray, 190, 255, cv2.THRESH_BINARY)[1]
-        imgSign = sign_extraction(imgBin)
+        #imgWarpGray = cv2.cvtColor(imgCropped, cv2.COLOR_BGR2GRAY)
+        imgBin = cv2.threshold(imgCropped, 190, 255, cv2.THRESH_BINARY)[1]
+        imgSign = sign_extraction(imgCropped)
+        imgPayee = payee_extraction(imgBin)
+        imgRs = rs_extraction(imgBin)
+        imgDate = date_extraction(imgBin)
+        imgAmmount = amount_extraction(imgBin)
+        imgAccno = accno_extraction(imgBin)
         cv2.imshow("Final", imgBin)
         cv2.imshow("Sign", imgSign)
-        data = sign_verification(imgSign,sign)
-        print(data)
+        cv2.imshow("Payee", imgPayee)
+        cv2.imshow("Rs", imgRs)
+        cv2.imshow("Date",imgDate)
+        cv2.imshow("Acc No.",imgAccno)
 
     else:
         cv2.imshow("Blank", np.zeros((Height, Width, 3), np.uint8))

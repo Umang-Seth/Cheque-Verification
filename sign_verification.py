@@ -15,17 +15,17 @@ def sign_verification(img1,img2):
     for m, n in matches:
         if m.distance < 0.75 * n.distance:
             good.append([m])
-    img3 = cv2.drawMatchesKnn(img1, kp1, img2Croppped, kp2, good, None, flags=2)
+    img3 = cv2.drawMatchesKnn(img1, kp1, img2, kp2, good, None, flags=2)
     cv2.imshow("img3", img3)
     return len(good)
 
 
-img1 = cv2.imread("Photo Cheque/shivam.jpg",0)
+img1 = cv2.imread("Photo Cheque/sign.png",0)
 img2 = cv2.imread("Photo Cheque/sampleCheque.png",0)
+
 Height = img2.shape[0]
 Width = img2.shape[1]
-img2Croppped = img2[int(Height/2):Height-80,int(Width-Width/3):Width]
-
+img2Croppped = img2[int(Height/2):Height-100,int(Width-Width/3):Width]
 
 print(sign_verification(img1,img2Croppped))
 #img3 = cv2.drawMatchesKnn(img1,kp1,img2Croppped,kp2,good,None,flags=2)
