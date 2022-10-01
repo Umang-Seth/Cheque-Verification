@@ -1,24 +1,39 @@
-# import cv2
-# import numpy as np
-
-# img = cv2.imread("Photo Cheque/bank-baroda.jpg")
-# print(img)
-
-# imgResize = cv2.resize(img,(300,200))
-# print(imgResize.shape)
-
-# imgCropped = img[0:200,0:500]
-
-# cv2.imshow("image",img)
-# cv2.imshow("Resize",imgResize)
-# cv2.imshow("Cropped",imgCropped)
-# cv2.waitKey(0)
-
 import cv2
 import numpy as np
 
 def empty(a):
     pass
+
+def image_resize(image, width = None, height = None, inter = cv2.INTER_AREA):
+    # initialize the dimensions of the image to be resized and
+    # grab the image size
+    dim = None
+    (h, w) = image.shape[:2]
+
+    # if both the width and height are None, then return the
+    # original image
+    if width is None and height is None:
+        return image
+
+    # check to see if the width is None
+    if width is None:
+        # calculate the ratio of the height and construct the
+        # dimensions
+        r = height / float(h)
+        dim = (int(w * r), height)
+
+    # otherwise, the height is None
+    else:
+        # calculate the ratio of the width and construct the
+        # dimensions
+        r = width / float(w)
+        dim = (width, int(h * r))
+
+    # resize the image
+    resized = cv2.resize(image, dim, interpolation = inter)
+
+    # return the resized image
+    return resized
 
 def initializeTrackbars(intialTracbarVals=0):
     cv2.namedWindow("Trackbars")
@@ -85,10 +100,25 @@ def getWarp(img, biggest):
     return imgOutput
 
 def sign_extraction(img):
-    imgCropped = img[int(Height/2):Height,int(Width-Width/3):Width]
+    imgCropped = img[int(Height/2):Height-80,int(Width-Width/3):Width]
     return imgCropped
 
-def 
+def sign_verification(img1,img2):
+    orb = cv2.ORB_create(nfeatures=1000)
+
+    kp1, des1 = orb.detectAndCompute(img1, None)
+    kp2, des2 = orb.detectAndCompute(img2, None)
+
+    bf = cv2.BFMatcher()
+    matches = bf.knnMatch(des1, des2, k=2)
+
+    good = []
+
+    for m, n in matches:
+        if m.distance < 0.75 * n.distance:
+            good.append([m])
+
+    return len(good)
 
 initializeTrackbars()
 count = 0
@@ -96,27 +126,32 @@ count = 0
 while True:
     #success, img = cap.read()
     img = cv2.imread("Photo Cheque/sampleCheque.png")
-    print(img.shape[1])
-    Width = img.shape[1]
-    Height = img.shape[0]
+    sign = cv2.imread("Photo Cheque/sign.png")
+    image = image_resize(img, width=640, height=286)#(1280,567)(1280,582)(1280,572)
+    Width = image.shape[1]
+    Height = image.shape[0]
+    #print("width",Width,"height",Height)
     #img = cv2.resize(img, (Width, Height))
-    imgContour = img.copy()
-    imgThres = preProcessing(img)
+    imgContour = image.copy()
+    imgThres = preProcessing(image)
     Biggest = getContours(imgThres)
-    imgWarp = getWarp(img, Biggest)
-
-    cv2.imshow("Original",img)
-    cv2.imshow("Original", imgContour)
-    cv2.imshow("Canny", imgThres)
+    imgWarp = getWarp(image, Biggest)
+    cv2.imshow("Show",sign)
+    #cv2.imshow("Original",image)
+    #cv2.imshow("Original", imgContour)
+    #cv2.imshow("Canny", imgThres)
 
     if Biggest.size != 0:
         imgCropped = imgWarp
         cv2.imshow("Output", imgCropped)
         imgWarpGray = cv2.cvtColor(imgCropped, cv2.COLOR_BGR2GRAY)
-        imgBin = cv2.threshold(imgWarpGray, 210, 255, cv2.THRESH_BINARY)[1]
+        imgBin = cv2.threshold(imgWarpGray, 190, 255, cv2.THRESH_BINARY)[1]
         imgSign = sign_extraction(imgBin)
         cv2.imshow("Final", imgBin)
         cv2.imshow("Sign", imgSign)
+        data = sign_verification(imgSign,sign)
+        print(data)
+
     else:
         cv2.imshow("Blank", np.zeros((Height, Width, 3), np.uint8))
 
