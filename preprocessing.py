@@ -112,15 +112,15 @@ def rs_extraction(img):
     return imgCropped
 
 def amount_extraction(img):
-    imgCropped = img[0:Height,0:Width]
+    imgCropped = img[100:133,495:Width]
     return imgCropped
 
 def date_extraction(img):
-    imgCropped = img[0:Height,0:Width]
+    imgCropped = img[18:35,490:620]
     return imgCropped
 
 def accno_extraction(img):
-    imgCropped = img[0:Height,0:Width]
+    imgCropped = img[140:165,55:255]
     return imgCropped
 
 initializeTrackbars()
@@ -128,7 +128,7 @@ count = 0
 
 while True:
     #success, img = cap.read()
-    img = cv2.imread("Photo Cheque/sampleCheque.png",0)
+    img = cv2.imread("Photo Cheque/cheque1.jpeg",0)
     sign = cv2.imread("Photo Cheque/sign.png",0)
     image = image_resize(img, width=640, height=286)#(1280,567)(1280,582)(1280,572)
     Width = image.shape[1]
@@ -148,18 +148,19 @@ while True:
         imgCropped = imgWarp
         cv2.imshow("Output", imgCropped)
         #imgWarpGray = cv2.cvtColor(imgCropped, cv2.COLOR_BGR2GRAY)
-        imgBin = cv2.threshold(imgCropped, 190, 255, cv2.THRESH_BINARY)[1]
+        imgBin = cv2.threshold(imgCropped, 140, 255, cv2.THRESH_BINARY)[1]
         imgSign = sign_extraction(imgCropped)
         imgPayee = payee_extraction(imgBin)
         imgRs = rs_extraction(imgBin)
         imgDate = date_extraction(imgBin)
-        imgAmmount = amount_extraction(imgBin)
+        imgAmount = amount_extraction(imgBin)
         imgAccno = accno_extraction(imgBin)
         cv2.imshow("Final", imgBin)
         cv2.imshow("Sign", imgSign)
         cv2.imshow("Payee", imgPayee)
         cv2.imshow("Rs", imgRs)
         cv2.imshow("Date",imgDate)
+        cv2.imshow("Amount",imgAmount)
         cv2.imshow("Acc No.",imgAccno)
 
     else:
