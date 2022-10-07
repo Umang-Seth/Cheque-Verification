@@ -128,7 +128,7 @@ count = 0
 
 while True:
     #success, img = cap.read()
-    img = cv2.imread("Photo Cheque/cheque1.jpeg",0)
+    img = cv2.imread("Photo Cheque/sampleCheque.png",0)
     sign = cv2.imread("Photo Cheque/sign.png",0)
     image = image_resize(img, width=640, height=286)#(1280,567)(1280,582)(1280,572)
     Width = image.shape[1]
