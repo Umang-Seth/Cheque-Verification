@@ -1,24 +1,39 @@
-# import cv2
-# import numpy as np
-
-# img = cv2.imread("Photo Cheque/bank-baroda.jpg")
-# print(img)
-
-# imgResize = cv2.resize(img,(300,200))
-# print(imgResize.shape)
-
-# imgCropped = img[0:200,0:500]
-
-# cv2.imshow("image",img)
-# cv2.imshow("Resize",imgResize)
-# cv2.imshow("Cropped",imgCropped)
-# cv2.waitKey(0)
-
 import cv2
 import numpy as np
 
 def empty(a):
     pass
+
+def image_resize(image, width = None, height = None, inter = cv2.INTER_AREA):
+    # initialize the dimensions of the image to be resized and
+    # grab the image size
+    dim = None
+    (h, w) = image.shape[:2]
+
+    # if both the width and height are None, then return the
+    # original image
+    if width is None and height is None:
+        return image
+
+    # check to see if the width is None
+    if width is None:
+        # calculate the ratio of the height and construct the
+        # dimensions
+        r = height / float(h)
+        dim = (int(w * r), height)
+
+    # otherwise, the height is None
+    else:
+        # calculate the ratio of the width and construct the
+        # dimensions
+        r = width / float(w)
+        dim = (width, int(h * r))
+
+    # resize the image
+    resized = cv2.resize(image, dim, interpolation = inter)
+
+    # return the resized image
+    return resized
 
 def initializeTrackbars(intialTracbarVals=0):
     cv2.namedWindow("Trackbars")
@@ -33,8 +48,8 @@ def valTrackbars():
     return src
 
 def preProcessing(img):
-    imgGray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    imgBlur = cv2.GaussianBlur(imgGray,(3,3),1)
+    #imgGray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    imgBlur = cv2.GaussianBlur(img,(3,3),1)
     imgCanny = cv2.Canny(imgBlur, 0, 1)
     kernel = np.ones((5, 5))
     imgDial = cv2.dilate(imgCanny, kernel, iterations=2)
@@ -85,38 +100,69 @@ def getWarp(img, biggest):
     return imgOutput
 
 def sign_extraction(img):
-    imgCropped = img[int(Height/2):Height,int(Width-Width/3):Width]
+    imgCropped = img[int(Height/2):Height-80,int(Width-Width/3):Width]
     return imgCropped
 
-def 
+def payee_extraction(img):
+    imgCropped = img[53:80,65:500]
+    return imgCropped
+
+def rs_extraction(img):
+    imgCropped = img[75:105,95:Width]
+    return imgCropped
+
+def amount_extraction(img):
+    imgCropped = img[100:133,495:Width]
+    return imgCropped
+
+def date_extraction(img):
+    imgCropped = img[18:35,490:620]
+    return imgCropped
+
+def accno_extraction(img):
+    imgCropped = img[140:165,55:255]
+    return imgCropped
 
 initializeTrackbars()
 count = 0
 
 while True:
     #success, img = cap.read()
-    img = cv2.imread("Photo Cheque/sampleCheque.png")
-    print(img.shape[1])
-    Width = img.shape[1]
-    Height = img.shape[0]
+    img = cv2.imread("Photo Cheque/sampleCheque.png",0)
+    sign = cv2.imread("Photo Cheque/sign.png",0)
+    image = image_resize(img, width=640, height=286)#(1280,567)(1280,582)(1280,572)
+    Width = image.shape[1]
+    Height = image.shape[0]
+    #print("width",Width,"height",Height)
     #img = cv2.resize(img, (Width, Height))
-    imgContour = img.copy()
-    imgThres = preProcessing(img)
+    imgContour = image.copy()
+    imgThres = preProcessing(image)
     Biggest = getContours(imgThres)
-    imgWarp = getWarp(img, Biggest)
-
-    cv2.imshow("Original",img)
-    cv2.imshow("Original", imgContour)
-    cv2.imshow("Canny", imgThres)
+    imgWarp = getWarp(image, Biggest)
+    cv2.imshow("Show",sign)
+    #cv2.imshow("Original",image)
+    #cv2.imshow("Original", imgContour)
+    #cv2.imshow("Canny", imgThres)
 
     if Biggest.size != 0:
         imgCropped = imgWarp
         cv2.imshow("Output", imgCropped)
-        imgWarpGray = cv2.cvtColor(imgCropped, cv2.COLOR_BGR2GRAY)
-        imgBin = cv2.threshold(imgWarpGray, 210, 255, cv2.THRESH_BINARY)[1]
-        imgSign = sign_extraction(imgBin)
+        #imgWarpGray = cv2.cvtColor(imgCropped, cv2.COLOR_BGR2GRAY)
+        imgBin = cv2.threshold(imgCropped, 140, 255, cv2.THRESH_BINARY)[1]
+        imgSign = sign_extraction(imgCropped)
+        imgPayee = payee_extraction(imgBin)
+        imgRs = rs_extraction(imgBin)
+        imgDate = date_extraction(imgBin)
+        imgAmount = amount_extraction(imgBin)
+        imgAccno = accno_extraction(imgBin)
         cv2.imshow("Final", imgBin)
         cv2.imshow("Sign", imgSign)
+        cv2.imshow("Payee", imgPayee)
+        cv2.imshow("Rs", imgRs)
+        cv2.imshow("Date",imgDate)
+        cv2.imshow("Amount",imgAmount)
+        cv2.imshow("Acc No.",imgAccno)
+
     else:
         cv2.imshow("Blank", np.zeros((Height, Width, 3), np.uint8))
 
